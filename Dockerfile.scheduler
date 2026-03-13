@@ -38,9 +38,11 @@ RUN wget -q https://download.oracle.com/otn_software/linux/instantclient/2340000
 
 ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_23_4
 
-# Python dependencies
+# Python dependencies (oracledb needs C compiler + Python headers to build)
 COPY scripts_python/requirements.txt /tmp/requirements.txt
-RUN pip3 install --no-cache-dir --break-system-packages -r /tmp/requirements.txt
+RUN apk add --no-cache --virtual .build-deps gcc musl-dev python3-dev \
+    && pip3 install --no-cache-dir --break-system-packages -r /tmp/requirements.txt \
+    && apk del .build-deps
 
 # Copy Python scripts
 COPY scripts_python ./scripts_python
