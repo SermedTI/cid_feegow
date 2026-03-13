@@ -1,0 +1,76 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file:
+      - .env
+    environment:
+      PORT: "3333"
+      HOST: "0.0.0.0"
+      NODE_ENV: production
+      # In production, the Nginx proxy makes requests from the same origin,
+      # so APP_ORIGIN should match the public URL users access.
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost:5175}
+      APP_ORIGINS: ${APP_ORIGINS:-}
+    expose:
+      - "3333"
+    networks:
+      - internal
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3333/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "${WEB_PORT:-5175}:80"
+    networks:
+      - internal
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:80/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.5"
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile.scheduler
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+    networks:
+      - internal
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+
+networks:
+  internal:
+    driver: bridge
