@@ -73,15 +73,22 @@ def create_pg_engine() -> Engine:
     return create_engine(url)
 
 
+ORACLE_LIB_DIR = "/opt/oracle/instantclient_21_12"
+
+
 def init_oracle_client() -> None:
-    """Inicializa o Oracle Client em thick mode (necessário para Oracle 11.2)."""
+    """Inicializa o Oracle Client em thick mode (obrigatório para Oracle 11.2)."""
     try:
-        lib_dir = os.getenv("LD_LIBRARY_PATH", "").split(":")[0] or None
-        config_dir = os.path.join(lib_dir, "network", "admin") if lib_dir else None
-        oracledb.init_oracle_client(lib_dir=lib_dir, config_dir=config_dir)
-    except oracledb.ProgrammingError:
-        # Já inicializado — ignora.
-        pass
+        oracledb.init_oracle_client(lib_dir=ORACLE_LIB_DIR)
+        print(f"  Thick mode inicializado ({ORACLE_LIB_DIR})")
+    except oracledb.ProgrammingError as err:
+        if "NJS-077" in str(err):
+            # Já inicializado — ok.
+            pass
+        else:
+            raise RuntimeError(
+                f"ERRO FATAL: Thick mode obrigatório para Oracle 11g mas falhou: {err}"
+            ) from err
 
 
 def connect_oracle() -> oracledb.Connection:
