@@ -15,14 +15,12 @@ export function createApp() {
   const app = express();
   const allowedOrigins = new Set([env.APP_ORIGIN, ...env.APP_ORIGINS]);
 
+  const openCors = allowedOrigins.has("*");
+
   app.use(
     cors({
       origin(origin, callback) {
-        if (!origin) {
-          return callback(null, true);
-        }
-
-        if (env.NODE_ENV !== "production") {
+        if (!origin || openCors) {
           return callback(null, true);
         }
 
