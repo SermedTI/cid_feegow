@@ -37,10 +37,10 @@ RUN wget -q https://download.oracle.com/otn_software/linux/instantclient/2340000
     && rm /tmp/instantclient.zip
 
 ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_23_4
-ENV TNS_ADMIN=/opt/oracle
+ENV TNS_ADMIN=/opt/oracle/instantclient_23_4
 
 # Allow legacy auth protocol (required for Oracle 11.2)
-COPY infra/oracle/sqlnet.ora /opt/oracle/sqlnet.ora
+COPY infra/oracle/sqlnet.ora /opt/oracle/instantclient_23_4/network/admin/sqlnet.ora
 
 # Python dependencies (oracledb needs C compiler + Python headers to build)
 COPY scripts_python/requirements.txt /tmp/requirements.txt

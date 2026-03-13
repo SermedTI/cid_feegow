@@ -76,7 +76,9 @@ def create_pg_engine() -> Engine:
 def init_oracle_client() -> None:
     """Inicializa o Oracle Client em thick mode (necessário para Oracle 11.2)."""
     try:
-        oracledb.init_oracle_client()
+        lib_dir = os.getenv("LD_LIBRARY_PATH", "").split(":")[0] or None
+        config_dir = os.path.join(lib_dir, "network", "admin") if lib_dir else None
+        oracledb.init_oracle_client(lib_dir=lib_dir, config_dir=config_dir)
     except oracledb.ProgrammingError:
         # Já inicializado — ignora.
         pass
