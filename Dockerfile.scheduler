@@ -29,18 +29,18 @@ RUN apk add --no-cache --allow-untrusted ca-certificates \
     && update-ca-certificates \
     && apk add --no-cache python3 py3-pip py3-psycopg2 libaio gcompat
 
-# Install Oracle Instant Client Basic-Lite (required for Oracle 11.2 thick mode)
-RUN wget -q https://download.oracle.com/otn_software/linux/instantclient/2340000/instantclient-basiclite-linux.x64-23.4.0.24.05.zip \
+# Install Oracle Instant Client 19 Basic-Lite (19.x still supports Oracle 11.2 auth protocol)
+RUN wget -q https://download.oracle.com/otn_software/linux/instantclient/1924000/instantclient-basiclite-linux.x64-19.24.0.0.0dbru.zip \
     -O /tmp/instantclient.zip \
     && mkdir -p /opt/oracle \
     && unzip -q /tmp/instantclient.zip -d /opt/oracle \
     && rm /tmp/instantclient.zip
 
-ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_23_4
-ENV TNS_ADMIN=/opt/oracle/instantclient_23_4
+ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_19_24
+ENV TNS_ADMIN=/opt/oracle/instantclient_19_24/network/admin
 
 # Allow legacy auth protocol (required for Oracle 11.2)
-COPY infra/oracle/sqlnet.ora /opt/oracle/instantclient_23_4/network/admin/sqlnet.ora
+COPY infra/oracle/sqlnet.ora /opt/oracle/instantclient_19_24/network/admin/sqlnet.ora
 
 # Python dependencies (oracledb needs C compiler + Python headers to build)
 COPY scripts_python/requirements.txt /tmp/requirements.txt
