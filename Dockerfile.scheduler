@@ -23,11 +23,20 @@ COPY packages/shared/package.json ./packages/shared/package.json
 COPY apps/api/package.json ./apps/api/package.json
 RUN npm ci --omit=dev
 
-# Install Python and dependencies
+# Install Python, libaio (required by Oracle Instant Client) and dependencies
 # --allow-untrusted: workaround for corporate proxies that intercept TLS
 RUN apk add --no-cache --allow-untrusted ca-certificates \
     && update-ca-certificates \
-    && apk add --no-cache python3 py3-pip py3-psycopg2
+    && apk add --no-cache python3 py3-pip py3-psycopg2 libaio gcompat
+
+# Install Oracle Instant Client Basic-Lite (required for Oracle 11.2 thick mode)
+RUN wget -q https://download.oracle.com/otn_software/linux/instantclient/2340000/instantclient-basiclite-linux.x64-23.4.0.24.05.zip \
+    -O /tmp/instantclient.zip \
+    && mkdir -p /opt/oracle \
+    && unzip -q /tmp/instantclient.zip -d /opt/oracle \
+    && rm /tmp/instantclient.zip
+
+ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_23_4
 
 # Python dependencies
 COPY scripts_python/requirements.txt /tmp/requirements.txt
